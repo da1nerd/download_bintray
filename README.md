@@ -13,11 +13,11 @@ This will compile and place the binary in `./bin`
 
 ## Usage
 
-Run the executable, giving it the url to your bintray downloads. Replace `<user>` with your bintray username.
-It will rebuild the folder structure on bintray in the current directory.
+Run the executable with `--help` to get a list of options.
+The following will download all of the artifacts of `someuser` from `https://dl.bintray.com/someuser/` into `~/bintray_backup`
 
 ```
-./bin/download_bintray https://dl.bintray.com/<user>/
+./bin/download_bintray -u someuser -d ~/bintray_backup
 ```
 
 You'll get some output like this and everything will be downloaded!
