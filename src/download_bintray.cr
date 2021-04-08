@@ -144,7 +144,13 @@ def download_file(url, dest)
   # perform the download
   File.open(dest, mode: "w") do |f|
     HTTP::Client.get(url) do |resp|
-      IO.copy(resp.body_io, f)
+      if resp.status_code == 200
+        IO.copy(resp.body_io, f)
+      elsif resp.status.redirection?
+        # follow the redirect
+        # This is dangerous to do without closing the first stream but... this is just a hacky downloader anyway
+        download_file(resp.headers["Location"], dest)
+      end
     end
   end
 end
@@ -165,6 +171,9 @@ def check_file(url, dest)
 
   local_size = File.size(dest)
   response = HTTP::Client.head(url)
+  if response.status.redirection?
+    return check_file(response.headers["Location"], dest)
+  end
   return false unless response.headers.has_key?("Content-Length")
   remote_size = response.headers["Content-Length"].to_i32
   is_valid = local_size == remote_size
