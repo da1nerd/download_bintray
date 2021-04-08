@@ -3,6 +3,11 @@
 JFrog is sunsetting Bintray on May 1, 2021 (see the [community announcement](https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/)).
 I couldn't find a simple way to backup all of my artifacts so I wrote this small client to download everything.
 
+> Note: I initially attempted to use `wget` for a recursive directory download, but bintray formatted the links in a funny way (probably to avoid people doing exactly that).
+
+This was written in haste and has a limited life span and use-case, so the code is quit ugly and I have no intention of changing that.
+PRs welcome!
+
 ## Installation
 
 ```bash
