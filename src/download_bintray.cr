@@ -5,6 +5,7 @@ BINTRAY_URL = "https://dl.bintray.com/"
 destination_dir = __DIR__
 replace_existing = false
 user = ""
+verbose = false
 
 OptionParser.parse do |parser|
   parser.banner = "Download Bintray. Use this to download all of your bintray artifacts."
@@ -13,6 +14,9 @@ OptionParser.parse do |parser|
   end
   parser.on "-r", "--replace", "Replace downloaded files instead of skipping them." do
     replace_existing = true
+  end
+  parser.on "-v", "--verbose", "Display all the log messages." do
+    verbose = true
   end
   parser.on "-d DIR", "--dir DIR", "The destination directory. Default is the current directory." do |dir|
     destination_dir = dir
@@ -24,13 +28,13 @@ OptionParser.parse do |parser|
 end
 
 unless user.empty?
-  download("#{BINTRAY_URL}#{user}/", destination_dir, replace_existing)
+  download("#{BINTRAY_URL}#{user}/", destination_dir, replace_existing, verbose)
 else
   puts "You must give a username. Use --help for details."
 end
 
 # Recursively downloads files from bintray.
-def download(url, dest, replace_existing)
+def download(url, dest, replace_existing, verbose)
   response = HTTP::Client.get url
   if response.status_code == 200
     # find links
@@ -39,27 +43,53 @@ def download(url, dest, replace_existing)
       href = l[1]
       text = l[2]
       new_dest = File.join(dest, text)
-      puts new_dest
       new_url = "#{url}#{text}"
       is_dir = text.ends_with?("/")
       if is_dir
-        puts "Entering #{new_url}"
+        log("Entering #{new_url}", verbose)
         # create dir and recurse
         Dir.mkdir_p(new_dest)
-        download(new_url, new_dest, replace_existing)
+        download(new_url, new_dest, replace_existing, verbose)
       else
         # Download file
-        puts "Downloading #{new_url}"
-        if replace_existing || !File.exists?(new_dest)
-          File.open(new_dest, mode: "w") do |f|
-            HTTP::Client.get(new_url) do |resp|
-              IO.copy(resp.body_io, f)
-            end
-          end
+        if replace_existing && File.exists?(new_dest)
+          log("Replacing #{new_dest}", verbose)
+          download_file(new_url, new_dest)
+        elsif !File.exists?(new_dest)
+          log("Downloading #{new_dest}", verbose)
+          download_file(new_url, new_dest)
+        else
+          log("Skipping #{new_dest}", verbose)
         end
       end
     end
   else
-    puts "#{response.status_code}: failed to read #{url}"
+    log("Failed to read #{url}", verbose)
+  end
+end
+
+def download_file(url, dest)
+  File.open(dest, mode: "w") do |f|
+    HTTP::Client.get(url) do |resp|
+      IO.copy(resp.body_io, f)
+    end
+  end
+end
+
+def log(message, verbose)
+  if verbose
+    puts message
+  else
+    if message.starts_with?("Replacing")
+      printf("r")
+    elsif message.starts_with?("Downloading")
+      printf("d")
+    elsif message.starts_with?("Skipping")
+      printf("s")
+    elsif message.starts_with?("Failed")
+      printf("e")
+    else
+      printf(".")
+    end
   end
 end
