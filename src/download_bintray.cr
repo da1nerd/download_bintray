@@ -18,7 +18,7 @@ OptionParser.parse do |parser|
   parser.on "-r", "--replace", "Replace downloaded files instead of skipping them." do
     replace_existing = true
   end
-  parser.on "-c", "--check", "Check that the artifacts were downloaded correctly." do
+  parser.on "-c", "--check", "Check that the artifacts were downloaded correctly. This is strongly suggested if your internet connect is unstable or you need to stop and re-start the program." do
     check_downloads = true
   end
   parser.on "-v", "--verbose", "Display all the log messages." do

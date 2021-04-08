@@ -17,7 +17,18 @@ Run the executable with `--help` to get a list of options.
 The following will download all of the artifacts of `someuser` from `https://dl.bintray.com/someuser/` into `~/bintray_backup`
 
 ```
-./bin/download_bintray -u someuser -d ~/bintray_backup
+./bin/download_bintray -u someuser -d ~/bintray_backup -c
+```
+
+The `-c` option will verify the size of the downloaded file.
+This will slow down the process, but the results are cached so re-runs have no performance penalty.
+By performing a file check you can safely recover from a corrupt download after a network interruption by simply re-running the program.
+
+Once everything is downloaded you can prune all the cached files.
+The caches make re-running the program a lot faster, but there is no reason to keep them if you have finished your backup.
+
+```
+./bin/download_bintray -d ~/bintray_backup -p
 ```
 
 ## Contributing
