@@ -1,0 +1,14 @@
+name: download_bintray
+version: 0.1.0
+description: Downloads everything from bintray
+
+authors:
+  - joel <da1nerd@pm.me>
+
+targets:
+  download_bintray:
+    main: src/download_bintray.cr
+
+crystal: 1.0.0
+
+license: MIT
