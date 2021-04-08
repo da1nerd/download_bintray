@@ -37,36 +37,47 @@ end
 
 # Recursively downloads files from bintray.
 def download(url, dest, replace_existing, verbose)
-  response = HTTP::Client.get url
-  if response.status_code == 200
-    # find links
-    links = response.body.scan(/href="([^"]+)"[^>]*>([^<]+)<\/a>/)
-    links.each do |l|
-      href = l[1]
-      text = l[2]
-      new_dest = File.join(dest, text)
-      new_url = "#{url}#{text}"
-      is_dir = text.ends_with?("/")
-      if is_dir
-        log("Entering #{new_url}", verbose)
-        # create dir and recurse
-        Dir.mkdir_p(new_dest)
-        download(new_url, new_dest, replace_existing, verbose)
-      else
-        # Download file
-        if replace_existing && File.exists?(new_dest)
-          log("Replacing #{new_dest}", verbose)
-          download_file(new_url, new_dest)
-        elsif !File.exists?(new_dest)
-          log("Downloading #{new_dest}", verbose)
-          download_file(new_url, new_dest)
-        else
-          log("Skipping #{new_dest}", verbose)
-        end
-      end
+  # Read html
+  index_file = File.join(dest, "index.html")
+  if replace_existing || !File.exists?(index_file)
+    response = HTTP::Client.get url
+    if response.status_code == 200
+      body = response.body
+      File.write(index_file, body)
+    else
+      log("Failed to read #{url}", verbose)
+      return
     end
   else
-    log("Failed to read #{url}", verbose)
+    # load from cache
+    body = File.read(index_file)
+  end
+
+  # find links
+  links = body.scan(/href="([^"]+)"[^>]*>([^<]+)<\/a>/)
+  links.each do |l|
+    href = l[1]
+    text = l[2]
+    new_dest = File.join(dest, text)
+    new_url = "#{url}#{text}"
+    is_dir = text.ends_with?("/")
+    if is_dir
+      log("Entering #{new_url}", verbose)
+      # create dir and recurse
+      Dir.mkdir_p(new_dest)
+      download(new_url, new_dest, replace_existing, verbose)
+    else
+      # Download file
+      if replace_existing && File.exists?(new_dest)
+        log("Replacing #{new_dest}", verbose)
+        download_file(new_url, new_dest)
+      elsif !File.exists?(new_dest)
+        log("Downloading #{new_dest}", verbose)
+        download_file(new_url, new_dest)
+      else
+        log("Skipping #{new_dest}", verbose)
+      end
+    end
   end
 end
 
