@@ -20,7 +20,7 @@ The following will download all of the artifacts of `someuser` from `https://dl.
 ./bin/download_bintray -u someuser -d ~/bintray_backup -c
 ```
 
-The `-c` option will verify the size of the downloaded file.
+The `-c` option will verify the size of the downloaded files.
 This will slow down the process, but the results are cached so re-runs have no performance penalty.
 By performing a file check you can safely recover from a corrupt download after a network interruption by simply re-running the program.
 
@@ -30,6 +30,8 @@ The caches make re-running the program a lot faster, but there is no reason to k
 ```
 ./bin/download_bintray -d ~/bintray_backup -p
 ```
+
+You now have a pristine mirror of your bintray artifacts!
 
 ## Contributing
 
