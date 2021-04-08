@@ -28,7 +28,9 @@ OptionParser.parse do |parser|
 end
 
 unless user.empty?
-  download("#{BINTRAY_URL}#{user}/", destination_dir, replace_existing, verbose)
+  download_url = "#{BINTRAY_URL}#{user}/"
+  puts "Downloading artifacts from #{download_url}"
+  download(download_url, destination_dir, replace_existing, verbose)
 else
   puts "You must give a username. Use --help for details."
 end
