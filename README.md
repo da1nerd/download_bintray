@@ -20,9 +20,6 @@ The following will download all of the artifacts of `someuser` from `https://dl.
 ./bin/download_bintray -u someuser -d ~/bintray_backup
 ```
 
-You'll get some output like this and everything will be downloaded!
-![image](https://user-images.githubusercontent.com/166412/114006947-154a5080-988b-11eb-9958-a5e67d13c0a2.png)
-
 ## Contributing
 
 1. Fork it (<https://github.com/your-github-user/download_bintray/fork>)
