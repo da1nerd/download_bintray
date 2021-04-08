@@ -14,10 +14,14 @@ This will compile and place the binary in `./bin`
 ## Usage
 
 Run the executable, giving it the url to your bintray downloads. Replace `<user>` with your bintray username.
+It will rebuild the folder structure on bintray in the current directory.
 
 ```
 ./bin/download_bintray https://dl.bintray.com/<user>/
 ```
+
+You'll get some output like this and everything will be downloaded!
+![image](https://user-images.githubusercontent.com/166412/114006947-154a5080-988b-11eb-9958-a5e67d13c0a2.png)
 
 ## Contributing
 
