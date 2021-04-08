@@ -9,6 +9,7 @@ user = ""
 verbose = false
 check_downloads = false
 prune = false
+errors_only = false
 
 OptionParser.parse do |parser|
   parser.banner = "Download Bintray. Use this to download all of your bintray artifacts."
@@ -23,6 +24,9 @@ OptionParser.parse do |parser|
   end
   parser.on "-v", "--verbose", "Display all the log messages." do
     verbose = true
+  end
+  parser.on "-e", "--errors_only", "Only log error messages." do
+    errors_only = true
   end
   parser.on "-d DIR", "--dir DIR", "The destination directory. Default is the current directory." do |dir|
     destination_dir = dir
@@ -55,7 +59,7 @@ unless user.empty?
   if check_downloads
     puts "Files will be verified after download. This will take longer."
   end
-  download(download_url, destination_dir, replace_existing, verbose, check_downloads)
+  download(download_url, destination_dir, replace_existing, verbose, check_downloads, errors_only)
 else
   puts "You must give a username. Use --help for details."
 end
@@ -77,7 +81,7 @@ def clean_dir(dir)
 end
 
 # Recursively downloads files from bintray.
-def download(url, dest, replace_existing, verbose, check_downloads)
+def download(url, dest, replace_existing, verbose, check_downloads, errors_only)
   # Read html
   index_file = File.join(dest, "index.html")
   if replace_existing || !File.exists?(index_file)
@@ -86,7 +90,7 @@ def download(url, dest, replace_existing, verbose, check_downloads)
       body = response.body
       File.write(index_file, body)
     else
-      log("Failed to read #{url}", verbose)
+      log("Failed to read #{url}", verbose, errors_only)
       return
     end
   else
@@ -103,28 +107,28 @@ def download(url, dest, replace_existing, verbose, check_downloads)
     new_url = "#{url}#{text}"
     is_dir = text.ends_with?("/")
     if is_dir
-      log("Entering #{new_url}", verbose)
+      log("Entering #{new_url}", verbose, errors_only)
       # create dir and recurse
       Dir.mkdir_p(new_dest)
-      download(new_url, new_dest, replace_existing, verbose, check_downloads)
+      download(new_url, new_dest, replace_existing, verbose, check_downloads, errors_only)
     else
       # Download file
       if replace_existing && File.exists?(new_dest)
-        log("Replacing #{new_dest}", verbose)
+        log("Replacing #{new_dest}", verbose, errors_only)
         download_file(new_url, new_dest)
       elsif !File.exists?(new_dest)
-        log("Downloading #{new_dest}", verbose)
+        log("Downloading #{new_dest}", verbose, errors_only)
         download_file(new_url, new_dest)
       else
-        log("Skipping #{new_dest}", verbose)
+        log("Skipping #{new_dest}", verbose, errors_only)
       end
       if check_downloads
-        log("Checking #{new_dest}", verbose)
+        log("Checking #{new_dest}", verbose, errors_only)
         if !check_file(new_url, new_dest)
-          log("Replacing #{new_dest} because file check failed", verbose)
+          log("Replacing #{new_dest} because file check failed", verbose, errors_only)
           download_file(new_url, new_dest)
           if !check_file(new_url, new_dest)
-            log("Failed to correct #{new_dest}", verbose)
+            log("Failed to correct #{new_dest}\n- The file size does not match #{new_url}", verbose, errors_only)
           end
         end
       end
@@ -161,6 +165,7 @@ def check_file(url, dest)
 
   local_size = File.size(dest)
   response = HTTP::Client.head(url)
+  return false unless response.headers.has_key?("Content-Length")
   remote_size = response.headers["Content-Length"].to_i32
   is_valid = local_size == remote_size
   if is_valid
@@ -171,18 +176,19 @@ def check_file(url, dest)
 end
 
 # Logs a progress message to the terminal.
-def log(message, verbose)
+def log(message, verbose, errors_only)
   if verbose
+    return if errors_only && !message.starts_with?("Failed")
     puts message
   else
-    if message.starts_with?("Replacing")
+    if message.starts_with?("Failed")
+      printf("E")
+    elsif message.starts_with?("Replacing") && !errors_only
       printf("r")
-    elsif message.starts_with?("Downloading")
+    elsif message.starts_with?("Downloading") && !errors_only
       printf("d")
-    elsif message.starts_with?("Skipping")
+    elsif message.starts_with?("Skipping") && !errors_only
       printf("s")
-    elsif message.starts_with?("Failed")
-      printf("e")
     elsif message.starts_with?("Checking")
       return
     else
