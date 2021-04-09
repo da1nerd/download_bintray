@@ -60,6 +60,7 @@ unless user.empty?
     puts "Files will be verified after download. This will take longer."
   end
   download(download_url, destination_dir, replace_existing, verbose, check_downloads, errors_only)
+  puts "\nFinished!"
 else
   puts "You must give a username. Use --help for details."
 end
